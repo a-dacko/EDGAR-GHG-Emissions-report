@@ -11,22 +11,22 @@ bibliography: resources/references.bib
 geometry:
 - top=1in
 - bottom=1in
-- left=1.25in
-- right=1.25in
+- left=0.9in
+- right=0.9in
 fontsize: 10pt
 ---
 
 ## Introduction
 
-This report was prepared based on the EDGAR GHG Emissions database coming from 2024 'GHG emissions of all world countries' Publication [@RCoreTeam] ([**report link**](https://edgar.jrc.ec.europa.eu/report_2024))
+All data manipulations, visualizations, and insights were integrated and documented within an R Markdown file. R Markdown allowed me for seamless integration of R code, markdown an Latex languages to ensures reproducibility, clarity, and transparency in how the analysis was conducted. The report's source code can be found on my github website here.
 
-All data manipulations, visualizations, and insights were integrated and documented within an R Markdown file. R Markdown allows for seamless integration of R code, markdown an Latex languages to ensures reproducibility, clarity, and transparency in how the analysis was conducted.
-
--   **Data Manipulations**: The raw data was processed using various R functions, including filtering, grouping, and summarizing, to deriving year to year percentage change and arithmetic mean. Libraries like `dplyr` and `tidyr` were used to clean, transform, and aggregate the data where necessary.
-
+In chart 1 the year to year percentage change was calculated for EU27, Euro area and World. The Euro area total GHG has to be summed GHG emission counties prior. I decided to present the data on a line chart with individual points highlighted
+-   **Data Manipulations**: The raw data was processed using various R functions, including filtering, grouping, and summarizing, to deriving year to year percentage change and arithmetic mean. The `dplyr` and `tidyr` libraries were used to clean, transform, and aggregate the data where necessary.
 -   **Plotting**: Visualizations were created using the `ggplot2` and `treemapify` package, which allowed for custom-designed plots to effectively communicate trends and relationships present in data.
 
 ## Insights report
+
+This report was prepared based on the EDGAR GHG Emissions database coming from 2024 'GHG emissions of all world countries' Publication [@EDGAR_REPORT] ([**report link**](https://edgar.jrc.ec.europa.eu/report_2024))
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,warning = FALSE, message = FALSE)
@@ -44,11 +44,14 @@ EDGAR_2024_totals = read_excel("resources/EDGAR_2024_GHG_booklet_2024.xlsx", she
 
 EDGAR_2024_per_capita=read_excel("resources/EDGAR_2024_GHG_booklet_2024.xlsx", sheet ="GHG_per_capita_by_country") %>% dplyr::filter(rowSums(is.na(.)) != ncol(.)) 
 
+populations_in_world <- read_csv("resources/populations_in_world.csv") %>% mutate(Population=`2023`)  %>% dplyr::select(`Country Name`,`Country Code`,Population)
+
 world_bank_income_groups=read_excel("resources/CLASS.xlsx") %>% 
-  dplyr::filter(rowSums(is.na(.)) != ncol(.)) %>% dplyr::select(Code,`Income group`) %>%
+  dplyr::filter(rowSums(is.na(.)) != ncol(.)) %>% dplyr::select(Code,`Income group`) %>% 
+  left_join(.,populations_in_world, by=c("Code"="Country Code"))%>%
   mutate(Code=case_when(Code=='CUW' ~ 'ANT',
                         Code=='SRB' ~ 'SCG',
-                        TRUE ~ Code))
+                        TRUE ~ Code)) %>% na.omit()
 
 country_continent_mapping = read_csv("resources/country_continent.csv") %>% dplyr::  select(Continent_Name,Three_Letter_Country_Code,Two_Letter_Country_Code) %>% dplyr::mutate(Three_Letter_Country_Code=if_else(Three_Letter_Country_Code=='SRB','SCG',Three_Letter_Country_Code)) 
 country_continent_mapping=country_continent_mapping[-c(117,192,235,9,17,60,85,172),]%>% na.omit()
@@ -81,17 +84,10 @@ euro_area_countries_3letter=
 
 ### Evolution of GHG growth in the euro area, European Union (EU27) and worldwide
 
-\begin{minipage}[t]{0.5\textwidth}
 \begin{itemize}
-   \item In the European Union (EU27) and Euro Area, there was a noticeable 7.5\% (or 261 Mt CO\textsubscript{2-eq}) decrease in total GHG emissions in 2023 compared to 2022, continuing the EU27 decreasing trend.
-   \item From 1970 to 2023 the EU27 and Euro Area countries showed steady decline in GHG emissions with 15\% compounded growth rate.
+   \item In the European Union (EU27) and Euro Area, there was a noticeable 8.1\% (or repetitively 261 Mt CO\textsubscript{2-eq} and 196  Mt CO\textsubscript{2-eq}) decrease in total GHG emissions in 2023 compared to 2022. On the other hand, the World GHG emission increased by 1.8\% (994 Mt CO\textsubscript{2-eq}). 
+   \item From 1990 to 2023 the EU27 and Euro Area countries showed steady decline in GHG emissions with -1.2\% compounded annual growth rate (CAGR) while Total World GHG emissions continue to raise with CAGR equal to 1.5\%.
 \end{itemize}
-\end{minipage}
-\begin{minipage}[t]{0.5\textwidth}
-\begin{itemize}
-   \item In 2023, all EU27 countries except Croatia and Cyprus experienced a decrease in their emission levels compared to the previous year. In terms of contribution to the EU27's GHG emissions in 2023, Germany remained the largest emitter, followed by France, Italy, Poland and Spain.
-\end{itemize}
-\end{minipage}
 
 ```{r Data preparation chart 1, include=FALSE}
 euro_area_row=EDGAR_2024_totals %>% 
@@ -108,10 +104,12 @@ EDGAR_2024_totals_transformed_chart1= EDGAR_2024_totals %>%
   dplyr::arrange(`Time period`) %>%
   dplyr::mutate(Diff_year = `Time period` - lag(`Time period`),  
          Diff_growth = `GHG Total` - lag(`GHG Total`), 
-         Rate_percent = (Diff_growth / Diff_year)/`GHG Total` * 100) %>% ungroup()
+         Rate_percent = (Diff_growth / Diff_year)/`GHG Total` * 100) %>% 
+  ungroup() %>% 
+  dplyr::filter(`Time period`>="1990")
 ```
 
-```{r, fig.width=8,fig.height=4.5}
+```{r, fig.width=8,fig.height=4}
 colScale2=scale_color_manual(values = c("#3a74ad","#f29f05","#0c3547"))
 
 
@@ -131,7 +129,7 @@ EDGAR_2024_totals_transformed_chart1 %>% na.omit()%>% mutate(Country=case_when(C
         axis.title.y =element_text(size=12),
         plot.subtitle = element_text(face= "italic"),
         plot.title.position = "plot",plot.caption.position ="plot" )+
-  xlim(c(1971,2025))+
+  xlim(c(1991,2025))+
   xlab("")+
   scale_x_continuous(n.breaks=12)
 
@@ -150,13 +148,22 @@ EDGAR_2024_totals_transformed_chart1 %>% na.omit()%>% mutate(Country=case_when(C
 \end{itemize}
 \end{minipage}
 
-```{r Data preparation for chart 2, include=FALSE}
-EDGAR_2024_per_capita_chart2=EDGAR_2024_per_capita %>% left_join(.,world_bank_income_groups,by = c("EDGAR Country Code"="Code")) %>% filter(!(Country %in% c("GLOBAL TOTAL", "EU27"))) %>% 
-  dplyr::mutate(`Income group`=if_else(`EDGAR Country Code` %in% c('AIA','SHK','REU','FLK','GLP','GUF','MTQ','SMP','SHN','SPM'),"High income",`Income group`)) %>% 
-  tidyr::pivot_longer(cols =dplyr::matches("^\\d{4}$"), names_to = "Time period",values_to='GHG per Capita') %>% 
-  filter(`Time period` == '2023') %>% 
-  select(-`Time period`) %>% group_by(`Income group`) %>% dplyr::mutate(Mean_per_capita=mean(`GHG per Capita`) %>% round(2)) %>% arrange(`GHG per Capita`) %>% ungroup()
+```{r Data preparation for char2, include=FALSE}
+# EDGAR_2024_per_capita_chart2=EDGAR_2024_per_capita %>% left_join(.,world_bank_income_groups,by = c("EDGAR Country Code"="Code")) %>% filter(!(Country %in% c("GLOBAL TOTAL", "EU27"))) %>% 
+#   dplyr::mutate(`Income group`=if_else(`EDGAR Country Code` %in% c('AIA','SHK','REU','FLK','GLP','GUF','MTQ','SMP','SHN','SPM'),"High income",`Income group`)) %>% 
+#   tidyr::pivot_longer(cols =dplyr::matches("^\\d{4}$"), names_to = "Time period",values_to='GHG per Capita') %>% 
+#   filter(`Time period` == '2023') %>% 
+#   select(-`Time period`) %>% group_by(`Income group`) %>% dplyr::mutate(Mean_per_capita=mean(`GHG per Capita`) %>% round(2),
+#                                                                                              Median_per_capita=median(`GHG per Capita`) %>% round(2)) %>% arrange(`GHG per Capita`) %>% ungroup()
 ```
+
+```{r Data preparation for chart 2, include=FALSE}
+EDGAR_2024_per_capita_chart2=EDGAR_2024_totals %>% dplyr::filter(!(`EDGAR Country Code` %in% c("EU27","GLOBAL TOTAL"))) %>%  left_join(.,world_bank_income_groups,by = c("EDGAR Country Code"="Code")) %>% filter(!(Country %in% c("GLOBAL TOTAL", "EU27"))) %>% 
+  tidyr::pivot_longer(cols =dplyr::matches("^\\d{4}$"), names_to = "Time period",values_to='GHG Total') %>% 
+  dplyr::filter(`Time period` == 2023) %>% select(-`Time period`) %>% mutate(`GHG per Capita`=(`GHG Total`/`Population`)*1000000) %>% na.omit()%>% group_by(`Income group`) %>% dplyr::mutate(Mean_per_capita=mean(`GHG per Capita`) %>% round(2),
+                                                                                             Median_per_capita=median(`GHG per Capita`) %>% round(2)) %>% arrange(`GHG per Capita`) %>% ungroup()
+```
+
 
 ```{r, eval=FALSE}
 # library("ggpubr")
@@ -187,7 +194,7 @@ ggdotchart(., x = 'EDGAR Country Code', y = 'GHG per Capita',
   theme_cleveland()
 ```
 
-```{r Plotting chart 2, fig.width=6.5,fig.height=3.5}
+```{r Plotting chart 2, fig.width=7,fig.height=4}
 colScale <- scale_fill_manual(values = c("#f29f05","#0c3547","#3a74ad","#e5c185"))
 EDGAR_2024_per_capita_chart2 %>% 
   na.omit() %>% 
@@ -201,9 +208,9 @@ EDGAR_2024_per_capita_chart2 %>%
   ylab("GHG per capita") +
   labs(title = "Greenhouse Gasses Emission per capita - Income groups comaparison in 2023", 
        subtitle =expression(Tonnes~of~CO[2]-equivalent~per~person),
-       caption = "Note.(1) Individual countries were classified based on the latest clasification provided by World Bank \n      (https://datatopics.worldbank.org/world-development-indicators/the-world-by-income-and-region.html) \n      (2) biubfu")+
+       caption = "Note.(1) Individual countries were classified based on the latest clasification provided by World Bank \n      (https://datatopics.worldbank.org/world-development-indicators/the-world-by-income-and-region.html) \n             (2) The World bank population total for each country were used to calculate the per capita indicator show on\n  the chart (https://data.worldbank.org/indicator/SP.POP.T)")+
   coord_flip()+
-  ylim(c(0,13))+colScale+theme(panel.grid.major.y=element_blank(),
+  ylim(c(0,15))+colScale+theme(panel.grid.major.y=element_blank(),
                                axis.text=element_text(size=10),
                                plot.subtitle = element_text(face= "italic"),
                                plot.caption = element_text(hjust=0),
@@ -244,7 +251,7 @@ EDGAR_2024_per_capita_chart3=EDGAR_2024_totals %>% dplyr::filter(!(`EDGAR Countr
    
 ```
 
-```{r Plotting chart 3,fig.width=8, fig.height=8.5}
+```{r Plotting chart 3,fig.width=8.4, fig.height=8.5}
 colScale <- scale_fill_manual(values = c("#e5c185","#f29f05","#3a74ad","#ff6361","#bc5090","#879e82"))
 
 EDGAR_2024_per_capita_chart3 %>% ggplot(., aes(area = Contribution,fill=Continent_Name, 
