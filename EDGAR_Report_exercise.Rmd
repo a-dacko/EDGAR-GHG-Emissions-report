@@ -1,36 +1,38 @@
 ---
-title: "Greenhouse Gasses Emissions in World's Economy Report"
 author: "Aleksandra Dacko"
+title: Greenhouse Gasses Emissions in World's Economy Report
 header-includes:
-- \usepackage[sfdefault]{roboto} 
+  - \usepackage[sfdefault]{roboto} 
+  - \usepackage{xcolor}
+  - \definecolor{mycolor}{RGB}{0, 32, 46}
+  - \color{mycolor}
+  - \usepackage{lipsum}
+  - \usepackage{wallpaper}
 output:
   pdf_document:
     toc: false
     latex_engine: xelatex
-bibliography: resources/references.bib
+bibliography: ./resources/references.bib
 geometry:
 - top=1in
-- bottom=1in
+- bottom=0.75in
 - left=0.75in
 - right=0.75in
 fontsize: 10pt
 ---
+\ULCornerWallPaper{1}{./resources/documenthead2.png}
+\LLCornerWallPaper{1}{./resources/documentfoot.png}
 
+## Data handling and visualization details
 
-## Introduction
+All data manipulations, visualizations, and textual insights were developed within a single `R Markdown` file. The use of R Markdown enabled integration of `R code`, `Markdown`, and `LaTeX`, ensuring reproducibility, clarity, and transparency throughout the analysis process. The raw data was processed using various R functions, including filtering, grouping, and deriving plotted indicators. The `dplyr` and `tidyr` libraries were employed to clean, transform, and aggregate the data as needed. Visualizations were created using the `ggplot2` and `treemapify` packages. The pdf format was designed for the exercise and is written in Latex. 
 
-All data manipulations, visualizations, and textual insights were written within a single R Markdown file. `R Markdown` allowed me for seamless integration of `R` code, `markdown`, and `Latex` languages to ensures reproducibility, clarity, and transparency in how the analysis was conducted.
-The raw data was processed using various R functions, including filtering, grouping and derivation of plotted indicators. The `dplyr` and `tidyr` libraries were used to clean, transform, and aggregate the data where necessary. While visualizations were generated using `ggplot2` and `treemapify` packages.
-
-- In chart 1 the year on year percentage change was calculated for EU27, Euro area (EA) and World Greenhouse Gasses (GHG) totals. The Euro area GHG emission was derived by summing total for countries belonging to EA. I presented the data on a line chart with visible data points to easily follow progression over time. 
-- In chart 2 I extracted data on income categories and populations totals from the publicly available World Bank database. I performed data cleaning (re-coded country codes and removed incomplete data) to synchronize data from EDGAR group and World Bank. I calculated the CO\textsubscript{2} emissions per capital within each of the income groups for year 2023 and presented in a bar chart for easy comparison between aggregates.
-- In chart 3 I collected data representing mapping between country and continent.I extracted only individual countries' data. I calculated the percentage of Total GHG emission for each of 7 continent as well as individual country. I used nested tree map to visualized the proportions of total for each continent as well as each country.
-
-The report's source code can be found on my github website here.
+-   Chart 1: The year-on-year percentage change in GHG emissions was calculated for the EU27, the Euro area (EA), and global totals. Emissions for the Euro area were derived by summing the totals of the countries within the EA.
+-   Chart 2: Data on income categories and total populations was sourced from the publicly available World Bank database. After cleaning the data (re-coding country codes and removing incomplete entries) to synchronize it with the EDGAR database, CO₂ emissions per capita were calculated for each income group for the year 2023
+-   Chart 3: Data mapping countries to continents was collected, focusing solely on individual countries. The percentage of total GHG emissions was calculated for each of the seven continents as well as individual countries.
+The report's source code can be found on my [$\text{\underline{GitHub repository}}$](https://github.com/a-dacko/EDGAR-GHG-Emissions-report).
 
 ## Insights report
-
-This report was prepared based on the EDGAR GHG Emissions database coming from 2024 'GHG emissions of all world countries' Publication [@EDGAR_REPORT] ([**report link**](https://edgar.jrc.ec.europa.eu/report_2024))
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,warning = FALSE, message = FALSE)
@@ -86,10 +88,16 @@ euro_area_countries_3letter=
 
 ### Evolution of GHG growth in the euro area, European Union (EU27) and worldwide
 
+\begin{minipage}[t]{0.5\textwidth}
 \begin{itemize}
-   \item In the European Union (EU27) and Euro Area, there was a noticeable 8.1\% (or repetitively 261 Mt CO\textsubscript{2-eq} and 196  Mt CO\textsubscript{2-eq}) decrease in total GHG emissions in 2023 compared to 2022. On the other hand, the World GHG emission increased by 1.8\% (994 Mt CO\textsubscript{2-eq}). 
+   \item In the European Union (EU27) and Euro Area, there was a noticeable 8.1\% (repetitively 261 Mt CO\textsubscript{2-eq} and 196  Mt CO\textsubscript{2-eq}) decrease in total GHG emissions in 2023 compared to 2022. On the other hand, the World GHG emission increased by 1.8\% (994 Mt CO\textsubscript{2-eq}).  
+\end{itemize}
+\end{minipage}
+\begin{minipage}[t]{0.5\textwidth}
+\begin{itemize}
    \item From 1990 to 2023 the EU27 and Euro Area countries showed steady decline in GHG emissions with -1.2\% compounded annual growth rate (CAGR) while Total World GHG emissions continue to raise with CAGR equal to 1.5\%.
 \end{itemize}
+\end{minipage}
 
 ```{r Data preparation chart 1, include=FALSE}
 euro_area_row=EDGAR_2024_totals %>% 
@@ -111,7 +119,7 @@ EDGAR_2024_totals_transformed_chart1= EDGAR_2024_totals %>%
   dplyr::filter(`Time period`>="1990")
 ```
 
-```{r, fig.width=8,fig.height=4}
+```{r, fig.width=8,fig.height=3.8}
 colScale2=scale_color_manual(values = c("#3a74ad","#f29f05","#0c3547"))
 
 
@@ -124,16 +132,18 @@ EDGAR_2024_totals_transformed_chart1 %>% na.omit()%>% mutate(Country=case_when(C
   colScale2+
   ylim(c(-10,10))+
   geom_hline(yintercept=0)+
-  ggtitle("Greenhouse Gasses Emission - Year on year growth rate", subtitle = "percantage change in total GHG emission")+
+  ggtitle("Greenhouse Gasses Emission - Year on year growth rate", subtitle = "Growth rate in %")+
   theme_minimal()+
-  theme(legend.position='bottom',
+  theme(legend.position = "bottom",
         legend.title=element_blank(),
         axis.title.y =element_text(size=12),
-        plot.subtitle = element_text(face= "italic"),
+        axis.text=element_text(size=10),
+        plot.title = element_text(size = 12),
+        plot.subtitle = element_text(face= "italic",size = 10),
         plot.title.position = "plot",plot.caption.position ="plot" )+
   xlim(c(1991,2025))+
   xlab("")+
-  ylab("Growth rate")+
+  ylab("")+
   scale_x_continuous(n.breaks=12)
 
 ```
@@ -142,73 +152,60 @@ EDGAR_2024_totals_transformed_chart1 %>% na.omit()%>% mutate(Country=case_when(C
 
 \begin{minipage}[t]{0.5\textwidth}
 \begin{itemize}
-   \item On average high-income countries emit around 11.8 t of CO\textsubscript{2-eq} per capita whereas low-income countries emits almost 8 times less tonnes of CO\textsubscript{2-eq} per capita with average of 1.5 t CO\textsubscript{2-eq} per capita which highlights disproportional emissions responsibility of wealthier nations. 
+   \item High-income countries emit around 12.4 t of CO\textsubscript{2-eq} per capita whereas low-income countries emits almost eight times less tonnes of CO\textsubscript{2-eq} per capita with 1.5 t CO\textsubscript{2-eq} per capita which highlights disproportional emissions responsibility of wealthier nations. 
 \end{itemize}
 \end{minipage}
 \begin{minipage}[t]{0.5\textwidth}
 \begin{itemize}
-   \item hkhoh
+   \item There is strong relationship between the country's the Gross Domestic Product (GDP) and the amounts of GHG it produces. Wealthier countries due to their advanced industrialization and economic growth produce more. 
 \end{itemize}
 \end{minipage}
 
 ```{r Data preparation for chart 2, include=FALSE}
 EDGAR_2024_per_capita_chart2=EDGAR_2024_totals %>% dplyr::filter(!(`EDGAR Country Code` %in% c("EU27","GLOBAL TOTAL"))) %>%  left_join(.,world_bank_income_groups,by = c("EDGAR Country Code"="Code")) %>% filter(!(Country %in% c("GLOBAL TOTAL", "EU27"))) %>% 
   tidyr::pivot_longer(cols =dplyr::matches("^\\d{4}$"), names_to = "Time period",values_to='GHG Total') %>% 
-  dplyr::filter(`Time period` == 2023) %>% select(-`Time period`) %>% mutate(`GHG per Capita`=(`GHG Total`/`Population`)*1000000) %>% na.omit()%>% group_by(`Income group`) %>% dplyr::mutate(Mean_per_capita=mean(`GHG per Capita`) %>% round(2),
-                                                                                             Median_per_capita=median(`GHG per Capita`) %>% round(2)) %>% arrange(`GHG per Capita`) %>% ungroup()
+  dplyr::filter(`Time period` == 2023) %>% select(-`Time period`) %>% mutate(`GHG per Capita`=(`GHG Total`/`Population`)*1000000) %>% na.omit()%>% group_by(`Income group`) %>%
+dplyr::mutate(income_group_population=sum(`Population`),
+              income_ghg_emission=sum(`GHG Total`), 
+              income_group_per_capita=(income_ghg_emission/income_group_population)*1000000 %>% round(2)) %>% arrange(`GHG per Capita`) %>% ungroup()
+
+new=EDGAR_2024_per_capita_chart2[c('Country','Income group', 'Population','GHG Total')]
+summarise(new)
 ```
 
-
-```{r, fig.width=10, fig.height=28,eval=FALSE}
-library("ggpubr")
-EDGAR_2024_per_capita_chart2 %>% na.omit() %>% select(`EDGAR Country Code`, `Income group`,`GHG per Capita`) %>%
-ggdotchart(., x = 'EDGAR Country Code', y = 'GHG per Capita',
-           color = 'Income group',                                # Color by groups
-           palette = c("#00AFBB", "#E7B800", "#FC4E07","navy"), # Custom color palette
-           sorting = "descending",                       # Sort value in descending order
-           rotate = TRUE,                                # Rotate vertically
-           dot.size = 2,                                 # Large dot size
-           y.text.col = TRUE,                            # Color y text by groups
-           ggtheme = theme_pubr()                        # ggplot2 theme
-           )+
-  theme_cleveland()
-```
-
-```{r Plotting chart 2, fig.width=8,fig.height=4.5}
+```{r Plotting chart 2, fig.width=8,fig.height=3.5}
 colScale <- scale_fill_manual(values = c("#f29f05","#0c3547","#3a74ad","#e5c185"))
 EDGAR_2024_per_capita_chart2 %>% 
   na.omit() %>% 
-  select(`Income group`,Mean_per_capita) %>% 
+  select(`Income group`,income_group_per_capita) %>% 
   unique() %>% 
-  ggplot(.,mapping=aes(x=reorder(`Income group`,Mean_per_capita, function(x){ sum(x) },decreasing=FALSE),y =Mean_per_capita,fill = `Income group`)) + 
+  ggplot(.,mapping=aes(x=reorder(`Income group`,income_group_per_capita, function(x){ sum(x) },decreasing=FALSE),y =income_group_per_capita,fill = `Income group`)) + 
   geom_col(show.legend=FALSE)+ 
-  geom_text(aes(label = format(round(Mean_per_capita,1),nsmall=1), hjust = -0.2))+
+  geom_text(aes(label = format(round(income_group_per_capita,1),nsmall=1), hjust = -0.2))+
   theme_minimal()+
   xlab("")+
   ylab("GHG per capita") +
   labs(title = "Greenhouse Gasses Emission per capita - 2023 income groups comaparison", 
        subtitle =expression(Tonnes~of~CO[2-eq]~per~capita~per~year),
-       caption = "Note.(1) Individual countries were classified based on the latest clasification provided by World Bank \n      (https://datatopics.worldbank.org/world-development-indicators/the-world-by-income-and-region.html). \n             (2) The GHG per capita was calculate using population totals from 2023 prowided by World Bank \n (https://data.worldbank.org/indicator/SP.POP.T).")+
-  coord_flip()+
-  ylim(c(0,15))+colScale+theme(panel.grid.major.y=element_blank(),
+       caption = "\n Notes.\n(1) Individual countries were classified based on the latest clasification provided by World Bank (https://datatopics.worldbank.org/world-development-indicators/the-world-by-income-and-region.html). \n(2) The GHG per capita was calculate using population totals from 2023 prowided by World Bank (https://data.worldbank.org/indicator/SP.POP.T).")+
+  coord_flip()+colScale+theme(panel.grid.major.y=element_blank(),
                                axis.text=element_text(size=10),
-                               plot.subtitle = element_text(face= "italic"),
-                               plot.caption = element_text(hjust=0),
+                               plot.title = element_text(size = 12),
+                               plot.subtitle = element_text(face= "italic",size = 10),
+                               plot.caption = element_text(hjust=0,size = 7),
                                plot.title.position = "plot",
-                               plot.caption.position =  "plot")
+                               plot.caption.position =  "plot")+
+  ylim(c(0,13))
 ```
+
+\newpage
 
 ### Contribution of individual country and continent GHG emissions to total world GHG emissions
 
-\begin{minipage}[t]{0.5\textwidth}
+\begin{minipage}[t]{1\textwidth}
 \begin{itemize}
    \item China, the United States, India, Russia and Brazil were the world’s largest GHG emitters in 2023. Together they account for 49.8\% of global population and 62.7\% of global GHG emissions.
-   \item Asia is responsible for the largest share of emissions, mainly due to rapid industrialization in countries like China and India. In African continent although the population is second larges the industrialization is on an incomperable lover lavel and in total accounts for 6% of total of total emaission. 
-\end{itemize}
-\end{minipage}
-\begin{minipage}[t]{0.5\textwidth}
-\begin{itemize}
-   \item In terms of contribution to the Europe GHG emissions in 2023, Germany remained the largest emitter, followed by France, Italy, Poland and Spain.
+   \item Asia is responsible for the largest share of emissions due to rapid industrialization in countries like China and India. African continent, having 2\textsuperscript{nd} largest share in world population, accounts only for 6\% of total of total GHG emissions which highlight. 
 \end{itemize}
 \end{minipage}
 
@@ -231,7 +228,7 @@ EDGAR_2024_per_capita_chart3=EDGAR_2024_totals %>% dplyr::filter(!(`EDGAR Countr
    
 ```
 
-```{r Plotting chart 3,fig.width=8.4, fig.height=8.5}
+```{r Plotting chart 3,fig.width=8.4, fig.height=8}
 colScale <- scale_fill_manual(values = c("#e5c185","#f29f05","#3a74ad","#ff6361","#bc5090","#879e82"))
 
 EDGAR_2024_per_capita_chart3 %>% ggplot(., aes(area = Contribution,fill=Continent_Name, 
@@ -244,8 +241,10 @@ EDGAR_2024_per_capita_chart3 %>% ggplot(., aes(area = Contribution,fill=Continen
   geom_treemap_text(colour = "white",place = "topleft", reflow = F,grow = FALSE)+
   geom_treemap_subgroup_text(place = "bottomleft", grow = T, alpha = 0.4, colour ="black", fontface = "italic", min.size = 0) +
   colScale+
-  ggtitle("Contribution of continent and individual country GHG emissions to total World GHG emissions", subtitle="Proportion of Total GHG emission in %")
+  ggtitle("Contribution of continent and individual country GHG emissions to total World GHG emissions in 2023", subtitle="Proportion of Total GHG emission in %")+
+  theme(panel.grid.major.y=element_blank(),
+        plot.title = element_text(size = 12),
+        plot.subtitle = element_text(face= "italic",size = 10),
+        plot.title.position = "plot")
 
 ```
-
-## References 
