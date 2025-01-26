@@ -34,32 +34,19 @@ To replicate the analysis and render the report, you will need:
 
     -   `tidyr`
 
--   `treemapify`
+    -   `treemapify`
 
--   `renv`
-
-### Instructions
-
-1.  **Clone the repository**: \
-    `bash     git clone git@github.com:a-dacko/EDGAR-GHG-Emissions-report.git     cd EDGAR-GHG-Emissions-report`
-
-2.  **Restore the R environment**: The project uses `renv` to manage
-     -   `ggplot2`
-     -   `dplyr`
-     -   `tidyr`
-     -   `treemapify`
-     -    `renv`
-     -    `rmarkdown`
+    -   `renv`
 
 
 ### Instructions
 
 1.  **Clone the repository**: 
-    ```{bash}
+    ```{r}
     git clone git@github.com:a-dacko/EDGAR-GHG-Emissions-report.git
     cd EDGAR-GHG-Emissions-report
     ```
-3.  **Restore the R environment**: The project uses `renv` to manage
+2.  **Restore the R environment**: The project uses `renv` to manage
     dependencies. Run the following command in your R console to install
     the required packages:
 
@@ -67,7 +54,7 @@ To replicate the analysis and render the report, you will need:
     renv::restore()
     ```
 
-4.  **Render the report**:\
+3.  **Render the report**:\
     Open the `EDGAR-GHG-Emissions-report.Rmd` file in RStudio and click
     the **Knit** button to generate the PDF report. Alternatively, you
     can use the following R code:
