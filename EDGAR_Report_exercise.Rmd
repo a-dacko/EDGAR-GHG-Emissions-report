@@ -234,8 +234,8 @@ EDGAR_2024_per_capita_chart3=EDGAR_2024_totals %>% dplyr::filter(!(`EDGAR Countr
 colScale <- scale_fill_manual(values = c("#e5c185","#f29f05","#3a74ad","#ff6361","#bc5090","#879e82"))
 
 EDGAR_2024_per_capita_chart3 %>% ggplot(., aes(area = Contribution,fill=Continent_Name, 
-                                               label=case_when(Contribution>0.35 ~ paste(Country,paste0(format(round(Contribution,1),nsmall = 1),"%") ,sep="\n"),
-                                                               Contribution<0.25 ~ Two_Letter_Country_Code ,
+                                               label=case_when(Contribution>=0.3 ~ paste(Country,paste0(format(round(Contribution,1),nsmall = 1),"%") ,sep="\n"),
+                                                               Contribution<0.18 ~ Two_Letter_Country_Code ,
                                                                .default = paste(Two_Letter_Country_Code,paste0(format(round(Contribution,1),nsmall = 1),"%") ,sep="\n")) ,
                 subgroup =paste(Continent_Name,paste0(format(round(Contribution_contr,1),nsmall = 1),"%")) ),show.legend = FALSE) +
   geom_treemap(colour ="white",show.legend = FALSE ) +
